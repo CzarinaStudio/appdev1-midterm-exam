@@ -8,19 +8,46 @@ import clientimage from './assets/images/client-image.jpg'
 import pricingtable01 from './assets/images/pricing-table-01.png'
 import whitelogo from './assets/images/white-logo.png'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 
 function App() {
   
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-  const [popupContainer, setIsContainerOpen] = useState(false);
-  const toggleContainer = () => {
-    setIsContainerOpen(!isContainerOpen);
-  }  
+  const [toggleModal, setToggleModal] = useState(false);
+  const [modalView, setModalView] = useState('social'); // 'social' | 'login' | 'register'
+
+  function handleToggleModal(open) {
+    // if `open` is provided as a string, treat it as the view to show
+    if (typeof open === 'string') {
+      setModalView(open);
+      setToggleModal(true);
+      return;
+    }
+
+    // toggle boolean when no arg provided
+    setToggleModal((prev) => !prev);
+  }
+
+  // Open modal based on URL hash or query param (e.g. /#login or /?modal=register)
+  useEffect(() => {
+    try {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      const modalParam = params.get('modal') && params.get('modal').toLowerCase();
+
+      if (hash === 'login' || modalParam === 'login') {
+        setModalView('login');
+        setToggleModal(true);
+      } else if (hash === 'register' || modalParam === 'register') {
+        setModalView('register');
+        setToggleModal(true);
+      }
+    } catch {
+      // ignore in non-browser environments
+    }
+  }, []);
+  console.log('modal open?', toggleModal, 'view:', modalView)
+
 
   return (
     <>
@@ -59,7 +86,7 @@ function App() {
               </li>
               <li>
                 <div className="gradient-button">
-                  <a id="modal_trigger" href="#modal">
+                  <a id="modal_trigger" href="#modal" onClick={handleToggleModal}>
                     <i className="fa fa-sign-in-alt" /> Sign In Now
                   </a>
                 </div>
@@ -75,16 +102,35 @@ function App() {
     </div>
   </header>
   {/* ***** Header Area End ***** */}
-  <div id="modal" className="popupContainer" style={{ display: "none" }}>
-    <div className="popupHeader">
-      <span className="header_title">Login</span>
-      <span className="modal_close">
+  <div
+  id="modal"
+  className="popupContainer"
+  style={
+    toggleModal
+      ? {
+          display: "block",
+          position: "fixed",
+          opacity: 1,
+          zIndex: 11000,
+          left: "50%",
+          marginLeft: "-165px",
+          top: 100,
+        }
+      : {
+          display: "none",
+        }
+  }
+>
+
+      <div className="popupHeader">
+      <span className="header_title">{modalView === 'register' ? 'Register' : modalView === 'login' ? 'Login' : 'Login'}</span>
+      <span className="modal_close" onClick={() => handleToggleModal(false)}>
         <i className="fa fa-times" />
       </span>
     </div>
     <section className="popupBody">
       {/* Social Login */}
-      <div className="social_login">
+      <div className="social_login" style={{ display: modalView === 'social' ? 'block' : 'none' }}>
         <div className="">
           <a href="#" className="social_box fb">
             <span className="icon">
@@ -104,19 +150,39 @@ function App() {
         </div>
         <div className="action_btns">
           <div className="one_half">
-            <a href="#" id="login_form" className="btn">
+            <a
+              href="#login"
+              id="login_form"
+              className="btn"
+              onClick={(e) => {
+                e.preventDefault();
+                setModalView('login');
+                setToggleModal(true);
+                try { window.location.hash = 'login'; } catch { /* ignore */ }
+              }}
+            >
               Login
             </a>
           </div>
           <div className="one_half last">
-            <a href="#" id="register_form" className="btn">
+            <a
+              href="#register"
+              id="register_form"
+              className="btn"
+              onClick={(e) => {
+                e.preventDefault();
+                setModalView('register');
+                setToggleModal(true);
+                try { window.location.hash = 'register'; } catch { /* ignore */ }
+              }}
+            >
               Sign up
             </a>
           </div>
         </div>
       </div>
       {/* Username & Password Login form */}
-      <div className="user_login">
+      <div className="user_login" style={{ display: modalView === 'login' ? 'block' : 'none' }}>
         <form>
           <label>Email / Username</label>
           <input type="text" />
@@ -130,7 +196,15 @@ function App() {
           </div>
           <div className="action_btns">
             <div className="one_half">
-              <a href="#" className="btn back_btn">
+              <a
+                href="#"
+                className="btn back_btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModalView('social');
+                  try { window.location.hash = ''; } catch { /* ignore */ }
+                }}
+              >
                 <i className="fa fa-angle-double-left" /> Back
               </a>
             </div>
@@ -146,7 +220,7 @@ function App() {
         </a>
       </div>
       {/* Register Form */}
-      <div className="user_register">
+      <div className="user_register" style={{ display: modalView === 'register' ? 'block' : 'none' }}>
         <form>
           <label>Full Name</label>
           <input type="text" />
@@ -165,7 +239,15 @@ function App() {
           </div>
           <div className="action_btns">
             <div className="one_half">
-              <a href="#" className="btn back_btn">
+              <a
+                href="#"
+                className="btn back_btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setModalView('social');
+                  try { window.location.hash = ''; } catch { /* ignore */ }
+                }}
+              >
                 <i className="fa fa-angle-double-left" /> Back
               </a>
             </div>
@@ -178,6 +260,7 @@ function App() {
         </form>
       </div>
     </section>
+
   </div>
   <div
     className="main-banner wow fadeIn"
@@ -915,6 +998,16 @@ function App() {
         </div>
       </div>
     </div>
+
+    <div
+      id="lean_overlay"
+      style={
+        toggleModal
+          ? { display: "block", opacity: "0.6" }
+          : { display: "none" }
+      }
+    />
+
   </footer>
 
 </>
